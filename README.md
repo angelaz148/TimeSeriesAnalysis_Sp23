@@ -23,6 +23,8 @@ Yu Hai <br>
 yu.hai@duke.edu <br>
 Office hours: TBD
 
+**Student** <br>
+Angela Zeng 
 
 **Syllabus** <br>
 
