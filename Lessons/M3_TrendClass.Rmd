@@ -166,3 +166,15 @@ pacf(ts_inflow_data[,1])
 #the blue dotted lines are the significance levels, if inside the lines, then not significant enough 
 ```
 
+The file filled in missing data with zeros. So we need to eliminate those obs at the end of the dataset. Can do that or the full year of 2011. 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+#remove obs from 2011
+inflow_data<- inflow_data %>%
+  filter(year(my_date) != 2011)
+
+```
+
+
