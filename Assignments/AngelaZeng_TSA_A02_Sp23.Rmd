@@ -4,6 +4,8 @@ subtitle: "Assignment 2 - Due date 02/03/23"
 author: "Angela Zeng"
 output: pdf_document
 geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Submission Instructions
@@ -25,6 +27,8 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 library(forecast)
 library(tseries)
 library(dplyr)
+library(lubridate)
+library(ggplot2)
 ```
 
 
@@ -35,6 +39,11 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 ```{r}
 #Importing data set
 energy_data <- read.csv(file="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
+
+#transform Date column 
+energy_data$Month<- ym(energy_data$Month)
+colnames(energy_data)[1]<- "Date"
+head(energy_data)
 ```
 
 
@@ -45,6 +54,7 @@ You will work only with the following columns: Total Biomass Energy Production, 
 colnames(energy_data)
 data<- energy_data[,c(1,4,5,6)]
 head(data)
+tail(data) #no zeros 
 ```
 
 
@@ -52,7 +62,8 @@ head(data)
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
 
 ```{r}
-
+ts_data<- ts(data[,(2:4)], frequency = 12, start = c(1973,1))
+head(ts_data)
 ```
 
 
@@ -60,14 +71,28 @@ Transform your data frame in a time series object and specify the starting point
 Compute mean and standard deviation for these three series.
 
 ```{r}
+biomass_prod_mean<- mean(data$Total.Biomass.Energy.Production)
+biomass_prod_sd<- sd(data$Total.Biomass.Energy.Production)
+renew_prod_mean<- mean(data$Total.Renewable.Energy.Production)
+renew_prod_sd<- sd(data$Total.Renewable.Energy.Production)
+hydro_prod_mean<- mean(data$Hydroelectric.Power.Consumption)
+hydro_prod_sd<- sd(data$Hydroelectric.Power.Consumption)
 
+#might how to output them
 ```
+
 
 
 ## Question 4
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
 ```{r}
+for(i in 1:ncol(data)-1){
+  print(ggplot(data, aes(x=Date, y=data[,(1+i)])) +
+            geom_line(color="blue") +
+            ylab(paste0(colnames(data)[1+i])) 
+        )
+}
 
 ```
 
