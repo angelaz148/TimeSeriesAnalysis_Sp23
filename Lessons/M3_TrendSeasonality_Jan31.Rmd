@@ -169,6 +169,25 @@ Now let's shift attention to the seasonal component.
 
 ```{r}
 #Use seasonal means model
+iHP<- 1
+
+dummies<- seasonaldummy(ts_inflow_data[,iHP])
+seas_mean_model<- lm(inflow_data[,(iHP+1)] ~ dummies)
+summary(seas_mean_model)
+
+#there are negative values bc they are relative to december, which is the coefficient 
+
+betas0<- seas_mean_model$coefficients[1]
+betas1<- seas_mean_model$coefficients[2:12]
+
+inflow_seas_comp<- array(0,nobs)
+for(i in 1:nobs){
+  inflow_seas_comp[i]<- betas0 + betas1 %*% dummies[i,]
+}
+
+ggplot(inflow_data, aes(x=my_date, y=inflow_data[,iHP+1]))+
+  geom_line(color="blue")+
+  geom_line(aes(y=inflow_seas_comp), color = "orange")
 
 
 ```
@@ -196,8 +215,9 @@ Check for deterministic trend.
 
 #Since I have seasonal data I cannot use the simple MannKendall()
 #another example of functions that need a ts object
-
-
+smktest<- SeasonalMannKendall(ts_inflow_data[,iHP])
+print(summary(smktest))
+library(trend)
 #Use yearly date to run Mann Kendall
 
 ```
@@ -222,9 +242,14 @@ Used to detect stochastic trend.
 ```{r}
 #Null hypothesis is that data has a unit root
 print("Results for ADF test/n")
+print(adf.test(ts_inflow_data[,iHP]), alternative = "stationarity")
+#^that doesnt work?
 
 #Now let's try the yearly data
 print("Results for ADF test on yearly data/n")
+
+#if this tells you there is a unit root, then theres no use running a linear trend 
+#if it returns stationarity, then still have to run mann kendall test 
 
 ```
 
