@@ -32,7 +32,7 @@ Let's continue working with our inflow data for reservoirs in Brazil.
 ```{r}
 
 #Importing time series data from text file#
-raw_inflow_data <- read.table(file="./Data/inflowtimeseries.txt",header=FALSE,skip=0)
+raw_inflow_data <- read.table(file="../Data/inflowtimeseries.txt",header=FALSE,skip=0)
 
 #Trim the table to include only columns you need
 nhydro <- ncol(raw_inflow_data)-2
@@ -282,6 +282,7 @@ Also check for deterministic trend, for non-seasonal data only.
 
 ```{r}
 #Deterministic trend with Spearman Correlation Test
+#doesnt work on seasonal data, only on yearly data 
 print("Results from Spearman Correlation")
 sp_rho=cor(inflow_data_yearly,my_year,method="spearman")
 print(sp_rho)
