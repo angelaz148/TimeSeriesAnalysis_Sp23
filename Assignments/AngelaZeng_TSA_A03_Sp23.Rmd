@@ -331,51 +331,53 @@ deseason_data1 <- data[,(1+j)]-inflow_seas_comp1
 ggplot(data, aes(x=Date, y=data[,(j+1)])) +
   geom_line(color="blue") +
   ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
-  geom_line(aes(y=deseason_data1), col="green")
+  geom_line(aes(y=deseason_data1), col="green")+
+  labs(title = paste0(colnames(data)[j+1], " Over Time (in blue) and Deseasoned (in green)", sep = " "))
 ```
-There is no change in the shape of the data, only in the vertical position of the data, because there is no seasonality in the data. 
-
+There is virtually no change in the shape of the data, only in the vertical position of the data, because there is little to no seasonality in the data. 
 
 ```{r}
-
-
 #Total Renewable Energy Production
-#Removing seasonal component
 j<-2
+#Removing seasonal component
 deseason_data2 <- data[,(1+j)]-inflow_seas_comp2
 
 #graph
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=deseason_data2), col="green")
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=deseason_data2), col="green")+
+  labs(title = paste0(colnames(data)[j+1], " Over Time (in blue) and Deseasoned (in green)", sep = " "))
+```
+There is little change in the shape of the data due to very little seasonality in the data. 
 
+```{r}
 #Hydroelectric Power Consumption
-#Removing seasonal component
 j<-3
-deseason_data3 <- data[,(1+iHP)]-inflow_seas_comp3
+#Removing seasonal component
+deseason_data3 <- data[,(j+1)]-inflow_seas_comp3
 
 #graph
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=deseason_data3), col="green")
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=deseason_data3), col="green")+
+  labs(title = paste0(colnames(data)[j+1], " Over Time (in blue) and Deseasoned (in green)", sep = " "))
 ```
-
+In the deseasoned graph, we can see the differences between each point a lot better than in the original data. 
 
 ### Q8
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
 ```{r}
 #make data frame of deseasoned data
-deseason_data<- data.frame(deseason_data)
+deseason_data<- data.frame(deseason_data1)
+deseason_data$i2<- deseason_data2
+deseason_data$i3<- deseason_data3
 deseason_data$Date<- data$Date
-deseason_data$HP2<- deseason_data2
-deseason_data$HP3<- deseason_data3
 
-deseason_data<- deseason_data[,c(2,1,3,4)]
+deseason_data<- deseason_data[,c(4,1:3)]
 colnames(deseason_data)<- colnames(data)
 ts_deseason_data<- ts(deseason_data[,(2:4)], frequency = 12, start = c(1973,1))
-
 
 #plot time series, Acf, and Pacf
 for(i in 1:(ncol(deseason_data)-1)){
