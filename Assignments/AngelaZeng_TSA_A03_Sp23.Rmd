@@ -90,6 +90,56 @@ Total Biomass Energy Production and Total Renewable Energy Production have an in
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
 
 ```{r}
+nobs <- nrow(data) 
+#Create vector t
+t <- c(1:nobs)
+
+#Fit a linear trend to TS of iHP = 1
+linear_trend_model1=lm(data[,2]~t)  
+print(summary(linear_trend_model1))
+beta1.0=as.numeric(linear_trend_model1$coefficients[1])  #first coefficient is the intercept term or beta0
+beta1.1=as.numeric(linear_trend_model1$coefficients[2])  #second coefficient is the slope or beta1
+  
+#Let's plot the time series with its trend line
+print(ggplot(data, aes(x=Date, y=data[,(2)])) +
+        geom_line(color="blue") +
+        ylab(paste0("Inflow ",colnames(data)[(2)],sep="")) +
+        #geom_abline(intercept = beta0, slope = beta1, color="red")
+        geom_smooth(color="red",method="lm"))
+
+```
+
+```{r}
+#Fit a linear trend to TS of iHP = 2
+iHP<- 2
+linear_trend_model2=lm(data[,3]~t)  
+print(summary(linear_trend_model2))
+beta2.0=as.numeric(linear_trend_model2$coefficients[1])  #first coefficient is the intercept term or beta0
+beta2.1=as.numeric(linear_trend_model2$coefficients[2])  #second coefficient is the slope or beta1
+
+#Let's plot the time series with its trend line
+print(ggplot(data, aes(x=Date, y=data[,(3)])) +
+        geom_line(color="blue") +
+        ylab(paste0("Inflow ",colnames(data)[(3)],sep="")) +
+        #geom_abline(intercept = beta0, slope = beta1, color="red")
+        geom_smooth(color="red",method="lm"))
+```
+
+
+```{r}
+#Fit a linear trend to TS of iHP = 3
+iHP<- 3
+linear_trend_model3=lm(data[,4]~t)  
+print(summary(linear_trend_model3))
+beta3.0=as.numeric(linear_trend_model3$coefficients[1])  #first coefficient is the intercept term or beta0
+beta3.1=as.numeric(linear_trend_model3$coefficients[2])  #second coefficient is the slope or beta1
+  
+#Let's plot the time series with its trend line
+print(ggplot(data, aes(x=Date, y=data[,(4)])) +
+        geom_line(color="blue") +
+        ylab(paste0("Inflow ",colnames(data)[(4)],sep="")) +
+        #geom_abline(intercept = beta0, slope = beta1, color="red")
+        geom_smooth(color="red",method="lm"))
 
 ```
 
@@ -97,8 +147,53 @@ Use the *lm()* function to fit a linear trend to the three time series. Ask R to
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
 
+```{r}
+iHP<- 1
+#remove the trend from series
+detrend_data1 <- data[,(iHP+1)]-(beta1.0+beta1.1*t)
+#plot graphs
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data1), col="green")+
+            geom_smooth(aes(y=detrend_data1),color="orange",method="lm") 
+
+```
+```{r}
+iHP<- 2
+#remove the trend from series
+detrend_data2 <- data[,(iHP+1)]-(beta2.0+beta2.1*t)
+#plot graphs
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data2), col="green")+
+            geom_smooth(aes(y=detrend_data2),color="orange",method="lm") 
+```
+```{r}
+iHP<- 3
+#remove the trend from series
+detrend_data3 <- data[,(iHP+1)]-(beta3.0+beta3.1*t)
+#plot graphs
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data3), col="green")+
+            geom_smooth(aes(y=detrend_data3),color="orange",method="lm") 
+```
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
+
+```{r}
+
+```
+
 
 ## Seasonal Component
 
