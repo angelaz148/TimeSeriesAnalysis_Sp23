@@ -5,7 +5,7 @@ author: "Angela Zeng"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
   
 ## Directions
@@ -37,6 +37,20 @@ library(tseries)
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+
+#import data set
+energy_data <- read.csv(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
+
+#transform Date column 
+energy_data$Month<- ym(energy_data$Month)
+colnames(energy_data)[1]<- "Date"
+head(energy_data)
+
+#extract columns 
+colnames(energy_data)
+data<- energy_data[,c(1,4,5,6)]
+head(data)
+tail(data) #no zeros 
 ```
 
 ##Trend Component
@@ -45,16 +59,40 @@ library(ggplot2)
 Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code from A2, but I want all three plots on the same window this time. (Hint: use par() function)
 
 ```{r}
-#plotgrid in the cowplot package 
-#or print the 3 ggplots separately 
+#make time series data 
+ts_data<- ts(data[,(2:4)], frequency = 12, start = c(1973,1))
+name<- colnames(data)
+
+#plot time series, Acf, and Pacf
+for(i in 1:(ncol(data)-1)){
+  par((mfrow=c(1,3))) #this does not work with ggplot 
+  print(ggplot(data, aes(x=Date, y=data[,(1+i)])) +
+          geom_line(color="blue") +
+          geom_hline(yintercept = mean(data[,(1+i)]), color="red") + 
+          ylab(paste0(colnames(data)[1+i], " (Trillion Btu)", sep = " "))+
+          xlab("Year")+
+          labs(title = paste0(colnames(data)[1+i], " Over Time", sep = " "))
+  )
+  Acf(ts_data[,i], lag.max=40, main=name[i+1], ylim=c(-1,1))
+  Pacf(ts_data[,i], lag.max=40,main=name[i+1], ylim=c(-1,1))
+}
+
 ```
 
 
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
+Total Biomass Energy Production and Total Renewable Energy Production have an increading linear trend. Hydroelectric Power Consumption has either a seasonal or a cyclical trend. 
+
+
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+
+```{r}
+
+```
+
  
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
