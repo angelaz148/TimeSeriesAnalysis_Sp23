@@ -5,7 +5,7 @@ author: "Angela Zeng"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
   
 ## Directions
@@ -39,7 +39,7 @@ library(lubridate)
 library(ggplot2)
 
 #import data set
-energy_data <- read.csv(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
+energy_data <- read.csv(file="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
 
 #transform Date column 
 energy_data$Month<- ym(energy_data$Month)
@@ -222,6 +222,7 @@ for(i in 1:(ncol(detrend_data)-1)){
   Pacf(detrend_data[,i], lag.max=40,main=name[i+1], ylim=c(-1,1))
 }
 ```
+After detrending, there is no longer a strong correlation between any lags in the Total Biomass Energy Production time series. We continue to see the seasonality in the ACF plot of the Hydroelectric Power Consumption time series. 
 
 ## Seasonal Component
 Set aside the detrended series and consider the original series again from Q1 to answer Q6 to Q8.
@@ -385,5 +386,5 @@ for(i in 1:(ncol(deseason_data)-1)){
   Pacf(ts_deseason_data[,i], lag.max=40,main=name[i+1], ylim=c(-1,1))
 }
 ```
-
-
+After removing the seasonality from the Total Renewable Energy Production and Hydroelectric Power Consumption time series, there is not longer any autocorrelation between any lags in the PACF plot. Acording to the ACF plot of the Hydroelectric Power Consumption time series, it is autoregressive. 
+H
