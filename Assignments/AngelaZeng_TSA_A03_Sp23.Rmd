@@ -94,7 +94,7 @@ nobs <- nrow(data)
 #Create vector t
 t <- c(1:nobs)
 
-#Fit a linear trend to TS of iHP = 1
+#Fit a linear trend to TS of Total Biomass Energy Production
 linear_trend_model1=lm(data[,2]~t)  
 print(summary(linear_trend_model1))
 beta1.0=as.numeric(linear_trend_model1$coefficients[1])  #first coefficient is the intercept term or beta0
@@ -112,8 +112,7 @@ print(ggplot(data, aes(x=Date, y=data[,(2)])) +
 There is a significantly positive correlation between the Total Biomass Energy Production and time. An intercept of 133.7 indicates that in year 1973, there was about 133.7 trillion Btu of Total Biomass Energy Produced. The slope of 0.48 indicates that every year, the Total Biomass Energy Produced increases by 0.40 trillion Btu.  
 
 ```{r}
-#Fit a linear trend to TS of iHP = 2
-iHP<- 2
+#Fit a linear trend to TS of Total Renewable Energy Production
 linear_trend_model2=lm(data[,3]~t)  
 print(summary(linear_trend_model2))
 beta2.0=as.numeric(linear_trend_model2$coefficients[1])  #first coefficient is the intercept term or beta0
@@ -131,8 +130,7 @@ print(ggplot(data, aes(x=Date, y=data[,(3)])) +
 There is also a significantly positive correlation between Total Renewable Energy Production and time. An intercept of 312.2 indicates that in 1973, there was about 312.2 trillion Btu of Total Renewable Energy Produced. The slope of 0.9362 indicates that every year, the Total Renewable Energy Produced increases by 0.9362 trillion Btu. 
 
 ```{r}
-#Fit a linear trend to TS of iHP = 3
-iHP<- 3
+#Fit a linear trend to TS of Hydroelectric Power Consumption
 linear_trend_model3=lm(data[,4]~t)  
 print(summary(linear_trend_model3))
 beta3.0=as.numeric(linear_trend_model3$coefficients[1])  #first coefficient is the intercept term or beta0
@@ -148,67 +146,75 @@ print(ggplot(data, aes(x=Date, y=data[,(4)])) +
         geom_smooth(color="red",method="lm"))
 
 ```
-There is a significantly negative trend between Hydroelectric Power Consumption and time. 
+There is a significantly negative trend between Hydroelectric Power Consumption and time. In 1973, the Hydroelectric Power Consumption was at about 259.9 trillion Btu. Every year, Hydroelectric Power Consumption decreases by 0.083 trillion Btu. 
  
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
 
 ```{r}
-iHP<- 1
+i<- 1
 #remove the trend from series
-detrend_data1 <- data[,(iHP+1)]-(beta1.0+beta1.1*t)
-#plot graphs
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            #geom_abline(intercept = beta0, slope = beta1, color="red")
-            geom_smooth(color="red",method="lm") +
-            geom_line(aes(y=detrend_data1), col="green")+
-            geom_smooth(aes(y=detrend_data1),color="orange",method="lm") 
-
+detrend_data1 <- data[,(i+1)]-(beta1.0+beta1.1*t)
+#plot graph
+ggplot(data, aes(x=Date, y=data[,(1+i)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[i+1], " (Trillion Btu)", sep = " "))+
+  xlab("Year")+
+  #geom_abline(intercept = beta0, slope = beta1, color="red")
+  geom_smooth(color="red",method="lm") +
+  geom_line(aes(y=detrend_data1), col="green")+
+  geom_smooth(aes(y=detrend_data1),color="orange",method="lm")+
+  labs(title = paste0(colnames(data)[i+1], " Over Time (in blue) and Detrended (in green)", sep = " "))
 ```
-
-```{r}
-iHP<- 2
-#remove the trend from series
-detrend_data2 <- data[,(iHP+1)]-(beta2.0+beta2.1*t)
-#plot graphs
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            #geom_abline(intercept = beta0, slope = beta1, color="red")
-            geom_smooth(color="red",method="lm") +
-            geom_line(aes(y=detrend_data2), col="green")+
-            geom_smooth(aes(y=detrend_data2),color="orange",method="lm") 
-```
+The detrended series no longer has a positive correlation with time. The mean is now at zero. 
 
 ```{r}
-iHP<- 3
+i<- 2
 #remove the trend from series
-detrend_data3 <- data[,(iHP+1)]-(beta3.0+beta3.1*t)
-#plot graphs
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            #geom_abline(intercept = beta0, slope = beta1, color="red")
-            geom_smooth(color="red",method="lm") +
-            geom_line(aes(y=detrend_data3), col="green")+
-            geom_smooth(aes(y=detrend_data3),color="orange",method="lm") 
+detrend_data2 <- data[,(i+1)]-(beta2.0+beta2.1*t)
+#plot graph
+ggplot(data, aes(x=Date, y=data[,(1+i)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[i+1], " (Trillion Btu)", sep = " "))+
+  xlab("Year")+
+  #geom_abline(intercept = beta0, slope = beta1, color="red")
+  geom_smooth(color="red",method="lm") +
+  geom_line(aes(y=detrend_data2), col="green")+
+  geom_smooth(aes(y=detrend_data2),color="orange",method="lm")+
+  labs(title = paste0(colnames(data)[i+1], " Over Time (in blue) and Detrended (in green)", sep = " "))
 ```
+The detrended series no longer has a positive correlation with time.
+
+```{r}
+i<- 3
+#remove the trend from series
+detrend_data3 <- data[,(i+1)]-(beta3.0+beta3.1*t)
+#plot graph
+ggplot(data, aes(x=Date, y=data[,(1+i)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[i+1], " (Trillion Btu)", sep = " "))+
+  xlab("Year")+
+  #geom_abline(intercept = beta0, slope = beta1, color="red")
+  geom_smooth(color="red",method="lm") +
+  geom_line(aes(y=detrend_data3), col="green")+
+  geom_smooth(aes(y=detrend_data3),color="orange",method="lm")+
+  labs(title = paste0(colnames(data)[i+1], " Over Time (in blue) and Detrended (in green)", sep = " "))
+```
+The detrended series no longer has a negative correlation with time. It is easier to see the cyclicity within the time series now.
+
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
 
 ```{r}
 #make data frame of detrended data
-detrend_data1<- data.frame(detrend_data1)
-detrend_data1$Date<- data$Date
-detrend_data1$HP2<- detrend_data2
-detrend_data1$HP3<- detrend_data3
+detrend_data<- data.frame(detrend_data1)
+detrend_data$i2<- detrend_data2
+detrend_data$i3<- detrend_data3
+detrend_data$Date<- data$Date
 
-detrend_data<- detrend_data1[,c(2,1,3,4)]
+detrend_data<- detrend_data[,c(4,1:3)]
 colnames(detrend_data)<- colnames(data)
 ts_detrend_data<- ts(detrend_data[,(2:4)], frequency = 12, start = c(1973,1))
-
 
 #plot time series, Acf, and Pacf
 for(i in 1:(ncol(detrend_data)-1)){
@@ -224,54 +230,48 @@ Set aside the detrended series and consider the original series again from Q1 to
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
 
 ```{r}
-#Let's choose another HP
-iHP=1 
+#Total Biomass Energy Production
+j=1 
 
-#Use seasonal means model
-#First create the seasonal dummies
-dummies <- seasonaldummy(ts_data[,iHP])  
+#create the seasonal dummies
+dummies1 <- seasonaldummy(ts_data[,j])  
 #this function only accepts ts object, no need to add one here because date object is not a column
 
-#Then fit a linear model to the seasonal dummies
-seas_means_model=lm(data[,(iHP+1)]~dummies)
-summary(seas_means_model)
+#fit a linear model to the seasonal dummies
+seas_means_model1=lm(data[,(j+1)]~dummies1)
+summary(seas_means_model1)
 
-#Look at the regression coefficient. These will be the values of Beta
-
-#Store regression coefficients
-beta_int=seas_means_model$coefficients[1]
-beta_coeff=seas_means_model$coefficients[2:12]
+#store regression coefficients
+beta_int1=seas_means_model1$coefficients[1]
+beta_coeff1=seas_means_model1$coefficients[2:12]
 
 #compute seasonal component
-inflow_seas_comp=array(0,nobs)
+inflow_seas_comp1=array(0,nobs)
 for(i in 1:nobs){
-  inflow_seas_comp[i]=(beta_int+beta_coeff%*%dummies[i,])
+  inflow_seas_comp1[i]=(beta_int1+beta_coeff1%*%dummies1[i,])
 }
 
-#Understanding what we did
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=inflow_seas_comp), col="red")
-
+#graph 
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=inflow_seas_comp1), col="red")
 ```
+This series does not have a seasonal trend. The time series is not significantly correlated with any of the dummy months. 
 
 ```{r}
-#Let's choose another HP
-iHP<- 2
+#Total Renewable Energy Production
+j=2
 
-#Use seasonal means model
-#First create the seasonal dummies
-dummies2 <- seasonaldummy(ts_data[,iHP])  
+#create the seasonal dummies
+dummies2 <- seasonaldummy(ts_data[,j])  
 #this function only accepts ts object, no need to add one here because date object is not a column
 
-#Then fit a linear model to the seasonal dummies
-seas_means_model2=lm(data[,(iHP+1)]~dummies2)
+#fit a linear model to the seasonal dummies
+seas_means_model2=lm(data[,(j+1)]~dummies2)
 summary(seas_means_model2)
 
-#Look at the regression coefficient. These will be the values of Beta
-
-#Store regression coefficients
+#store regression coefficients
 beta_int2=seas_means_model2$coefficients[1]
 beta_coeff2=seas_means_model2$coefficients[2:12]
 
@@ -281,30 +281,27 @@ for(i in 1:nobs){
   inflow_seas_comp2[i]=(beta_int2+beta_coeff2%*%dummies2[i,])
 }
 
-#Understanding what we did
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=inflow_seas_comp2), col="red")
-
+#graph 
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=inflow_seas_comp2), col="red")
 ```
+This series does not have a seasonal trend. The time series is not significantly correlated with any of the dummy months. 
 
 ```{r}
-#Let's choose another HP
-iHP<- 3 
+#Hydroelectric Power Consumption
+j=3
 
-#Use seasonal means model
-#First create the seasonal dummies
-dummies3 <- seasonaldummy(ts_data[,iHP])  
+#create the seasonal dummies
+dummies3 <- seasonaldummy(ts_data[,j])  
 #this function only accepts ts object, no need to add one here because date object is not a column
 
-#Then fit a linear model to the seasonal dummies
-seas_means_model3=lm(data[,(iHP+1)]~dummies3)
+#fit a linear model to the seasonal dummies
+seas_means_model3=lm(data[,(j+1)]~dummies3)
 summary(seas_means_model3)
 
-#Look at the regression coefficient. These will be the values of Beta
-
-#Store regression coefficients
+#store regression coefficients
 beta_int3=seas_means_model3$coefficients[1]
 beta_coeff3=seas_means_model3$coefficients[2:12]
 
@@ -314,43 +311,51 @@ for(i in 1:nobs){
   inflow_seas_comp3[i]=(beta_int3+beta_coeff3%*%dummies3[i,])
 }
 
-#Understanding what we did
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=inflow_seas_comp3), col="red")
-
+#graph 
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=inflow_seas_comp3), col="red")
 ```
+This series has a strong seasonal component (p-value < 0.05). The time series is significantly correlated with all but two of the dummy months. 
 
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
+```{r}
+#Total Biomass Energy Production
+j<-1
+#Removing seasonal component
+deseason_data1 <- data[,(1+j)]-inflow_seas_comp1
+
+#graph
+ggplot(data, aes(x=Date, y=data[,(j+1)])) +
+  geom_line(color="blue") +
+  ylab(paste0(colnames(data)[j+1], " (Trillion Btu)", sep = " "))+
+  geom_line(aes(y=deseason_data1), col="green")
+```
+There is no change in the shape of the data, only in the vertical position of the data, because there is no seasonality in the data. 
+
 
 ```{r}
-#HP1
+
+
+#Total Renewable Energy Production
 #Removing seasonal component
-deseason_data <- data[,(1+iHP)]-inflow_seas_comp
+j<-2
+deseason_data2 <- data[,(1+j)]-inflow_seas_comp2
 
-#Understanding what we did
-ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
-            geom_line(color="blue") +
-            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
-            geom_line(aes(y=deseason_data), col="green")
-
-#HP2
-#Removing seasonal component
-deseason_data2 <- data[,(1+iHP)]-inflow_seas_comp2
-
-#Understanding what we did
+#graph
 ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
             geom_line(color="blue") +
             ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
             geom_line(aes(y=deseason_data2), col="green")
 
-#HP3
+#Hydroelectric Power Consumption
 #Removing seasonal component
+j<-3
 deseason_data3 <- data[,(1+iHP)]-inflow_seas_comp3
 
-#Understanding what we did
+#graph
 ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
             geom_line(color="blue") +
             ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
