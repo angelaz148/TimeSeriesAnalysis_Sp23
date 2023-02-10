@@ -5,7 +5,7 @@ author: "Angela Zeng"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
   
 ## Directions
@@ -39,7 +39,7 @@ library(lubridate)
 library(ggplot2)
 
 #import data set
-energy_data <- read.csv(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
+energy_data <- read.csv(file="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv", header = TRUE, dec = ".", sep=",",stringsAsFactors = TRUE) 
 
 #transform Date column 
 energy_data$Month<- ym(energy_data$Month)
@@ -161,6 +161,7 @@ ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
             geom_smooth(aes(y=detrend_data1),color="orange",method="lm") 
 
 ```
+
 ```{r}
 iHP<- 2
 #remove the trend from series
@@ -191,16 +192,120 @@ ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
 
 ```{r}
+#make data frame of detrended data
+detrend_data1<- data.frame(detrend_data1)
+detrend_data1$Date<- data$Date
+detrend_data1$HP2<- detrend_data2
+detrend_data1$HP3<- detrend_data3
 
+detrend_data<- detrend_data1[,c(2,1,3,4)]
+colnames(detrend_data)<- colnames(data)
+ts_detrend_data<- ts(detrend_data[,(2:4)], frequency = 12, start = c(1973,1))
+
+
+#plot time series, Acf, and Pacf
+for(i in 1:(ncol(detrend_data)-1)){
+  Acf(detrend_data[,i], lag.max=40, main=name[i+1], ylim=c(-1,1))
+  Pacf(detrend_data[,i], lag.max=40,main=name[i+1], ylim=c(-1,1))
+}
 ```
 
-
 ## Seasonal Component
-
 Set aside the detrended series and consider the original series again from Q1 to answer Q6 to Q8.
 
 ### Q6
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
+
+```{r}
+#Let's choose another HP
+iHP=1 
+
+#Use seasonal means model
+#First create the seasonal dummies
+dummies <- seasonaldummy(ts_data[,iHP])  
+#this function only accepts ts object, no need to add one here because date object is not a column
+
+#Then fit a linear model to the seasonal dummies
+seas_means_model=lm(data[,(iHP+1)]~dummies)
+summary(seas_means_model)
+
+#Look at the regression coefficient. These will be the values of Beta
+
+#Store regression coefficients
+beta_int=seas_means_model$coefficients[1]
+beta_coeff=seas_means_model$coefficients[2:12]
+
+#compute seasonal component
+inflow_seas_comp=array(0,nobs)
+for(i in 1:nobs){
+  inflow_seas_comp[i]=(beta_int+beta_coeff%*%dummies[i,])
+}
+
+#Understanding what we did
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            geom_line(aes(y=inflow_seas_comp), col="red")
+
+
+#Removing seasonal component
+deseason_data <- data[,(1+iHP)]-inflow_seas_comp
+
+#Understanding what we did
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            geom_line(aes(y=deseason_data), col="green")
+
+```
+
+```{r}
+#Let's choose another HP
+iHP=2 
+
+#Use seasonal means model
+#First create the seasonal dummies
+dummies2 <- seasonaldummy(ts_data[,iHP])  
+#this function only accepts ts object, no need to add one here because date object is not a column
+
+#Then fit a linear model to the seasonal dummies
+seas_means_model2=lm(data[,(iHP+1)]~dummies2)
+summary(seas_means_model2)
+
+#Look at the regression coefficient. These will be the values of Beta
+
+#Store regression coefficients
+beta_int2=seas_means_model2$coefficients[1]
+beta_coeff2=seas_means_model2$coefficients[2:12]
+
+#compute seasonal component
+inflow_seas_comp2=array(0,nobs)
+for(i in 1:nobs){
+  inflow_seas_comp2[i]=(beta_int2+beta_coeff2%*%dummies2[i,])
+}
+
+#Understanding what we did
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            geom_line(aes(y=inflow_seas_comp2), col="red")
+
+
+#Removing seasonal component
+deseason_data2 <- data[,(1+iHP)]-inflow_seas_comp2
+
+#Understanding what we did
+ggplot(data, aes(x=Date, y=data[,(1+iHP)])) +
+            geom_line(color="blue") +
+            ylab(paste0("Inflow ",colnames(data)[(1+iHP)],sep="")) +
+            geom_line(aes(y=deseason_data2), col="green")
+```
+
+```{r}
+
+```
+
+
 
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
