@@ -1,6 +1,6 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
-subtitle: "Assignment 4 - Due date 02/17/23"
+subtitle: "Assignment 4 - Due date 02/20/23"
 author: "Angela Zeng"
 output: pdf_document
 geometry: margin=2.54cm
@@ -21,9 +21,15 @@ When you have completed the assignment, **Knit** the text and code into a single
 R packages needed for this assignment: "xlsx" or "readxl", "ggplot2", "forecast","tseries", and "Kendall". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
 
 ```{r}
-#Load/install required package here
-
-
+#Load/install required package
+library(readxl)
+library(readxl)
+library(ggplot2)
+library(forecast)
+library(tseries)
+library(Kendall)
+library(dplyr)
+library(lubridate)
 ```
 
 ## Questions 
@@ -33,8 +39,26 @@ Consider the same data you used for A3 from the spreadsheet "Table_10.1_Renewabl
 
 ```{r}
 #Importing data set - using xlsx package
+energy_data<- read_excel(path="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip = 12, sheet="Monthly Data",col_names=FALSE)
 
+read_col_names <- read_excel(path="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip = 10,n_max = 1, sheet="Monthly Data",col_names=FALSE) 
 
+colnames(energy_data) <- read_col_names
+head(energy_data,5)
+
+#transform Date column 
+energy_data$Month<- as.Date(energy_data$Month)
+colnames(energy_data)[1]<- "Date"
+head(energy_data)
+
+#extract columns 
+colnames(energy_data)
+data<- energy_data[,c(1,5)]
+head(data)
+tail(data) #no zeros 
+
+#make time series data 
+ts_data<- ts(data[,2], frequency = 12, start = c(1973,1))
 ```
 
 
@@ -50,8 +74,21 @@ Difference the "Total Renewable Energy Production" series using function diff().
 Try differencing at lag 1 only once, i.e., make `lag=1` and `differences=1`. Plot the differenced series Do the series still seem to have trend?
 
 ```{r}
+#difference the time series
+diff_renewableP<- diff(ts_data, lag=1, differences=1)
 
+#create data frame for diffeerenced series 
+diff_df<- data.frame(data$Date[1:596], diff_renewableP)
+colnames(diff_df)<- c('Date','diff_renewableP')
+
+#plot the differenced series 
+ggplot(diff_df, aes(x=Date, y=diff_renewableP)) +
+          geom_line(color="blue") +
+          labs(title = 'Differenced Total Renewable Energy Production Over Time',
+               y='Differenced Total Renewable Energy Production',
+               x='Year')
 ```
+The differenced series does not seem to have a trend. The data seems to move around zero. However, the spread of the differenced series grows larger over time. 
 
 ### Q2
 
@@ -60,7 +97,32 @@ Now let's compare the differenced series with the detrended series you calculate
 Copy and paste part of your code for A3 where you compute regression for Total Energy Production and the detrended Total Energy Production
 
 ```{r}
+#fit linear model over Total Renewable Energy Production 
+nobs <- nrow(data) 
+t <- c(1:nobs) #Create vector t
+linear_trend_model=lm(`Total Renewable Energy Production`~t, data=data)  
+print(summary(linear_trend_model))
+beta0=as.numeric(linear_trend_model$coefficients[1])  #first coefficient is the intercept term or beta0
+beta1=as.numeric(linear_trend_model$coefficients[2])  #second coefficient is the slope or beta1
 
+#Plot Total Renewable Energy Production with trend line 
+print(ggplot(data, aes(x=Date, y=`Total Renewable Energy Production`)) +
+        geom_line(color="blue") +
+        labs(title = 'Total Renewable Energy Production Over Time',
+               y='Total Renewable Energy Production (Trillion Btu)',
+               x='Year')+
+        geom_smooth(color="red",method="lm"))
+
+#detrend Total Renewable Energy Production 
+detrend <- data$`Total Renewable Energy Production`-(beta0+beta1*t)
+
+#plot detrended series
+ggplot(data, aes(x= Date, y= `Total Renewable Energy Production`)) +
+  geom_line(color= "blue") +
+  geom_line(aes(y= detrend), col="green")+
+  labs(title = 'Total Renewable Energy Production Over Time (in blue) and Detrended (in green)',
+               y='Total Renewable Energy Production (Trillion Btu)',
+               x='Year')
 ```
 
 ### Q3
