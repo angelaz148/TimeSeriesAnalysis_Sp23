@@ -30,6 +30,7 @@ library(tseries)
 library(Kendall)
 library(dplyr)
 library(lubridate)
+library(tidyverse)
 ```
 
 ## Questions 
@@ -78,7 +79,7 @@ Try differencing at lag 1 only once, i.e., make `lag=1` and `differences=1`. Plo
 diff_renewableP<- diff(ts_data, lag=1, differences=1)
 
 #create data frame for diffeerenced series 
-diff_df<- data.frame(data$Date[1:596], diff_renewableP)
+diff_df<- data.frame(data$Date[2:597], diff_renewableP)
 colnames(diff_df)<- c('Date','diff_renewableP')
 
 #plot the differenced series 
@@ -130,16 +131,27 @@ Create a data frame with 4 columns: month, original series, detrended by Regress
 
 ```{r}
 #Data frame - remember to not include January 1973
-
-
+alldf<- data.frame(diff_df, data$`Total Renewable Energy Production`[2:597], detrend[2:597])
+alldf<- alldf[,c(1,3,4,2)]
+colnames(alldf)<- c('Date','Original','Detrended','Differenced')
 ```
 
 ### Q4
 Using ggplot() create a line plot that shows the three series together. Make sure you add a legend to the plot.
 
 ```{r}
-#Use ggplot
+#reeorg dataframe for legend making 
+alldf2 <- alldf %>%
+  select(Date, Original, Detrended, Differenced) %>%
+  gather(key = "Series", value = "value", -Date)
+head(alldf2)
 
+#ggplot 
+ggplot(alldf2, aes(x = Date, y = value)) + 
+  geom_line(aes(color = Series))+
+  labs(title = 'Total Renewable Energy Production Over Time',
+               y='Total Renewable Energy Production (Trillion Btu)',
+               x='Year')
 ```
 
 
@@ -147,9 +159,19 @@ Using ggplot() create a line plot that shows the three series together. Make sur
 Plot the ACF for the three series and compare the plots. Add the argument `ylim=c(-0.5,1)` to the Acf() function to make sure all three y axis have the same limits. Which method do you think was more efficient in eliminating the trend? The linear regression or differencing?
 
 ```{r}
-#Compare ACFs
+#lag.max: the maximum lag at which to calculate
+#the acf.plot=TRUE: the acf will be plotted
 
+#convert dataframe with all three series into a time series 
+ts_alldf<- ts(alldf[,(2:4)], frequency = 12, start = c(1973,2))
+
+#Compare ACFs
+par(mfrow=c(2,2))
+acf(ts_alldf[,1],lag.max=40, plot=TRUE, main=colnames(ts_alldf)[1], ylim=c(-0.5,1))
+acf(ts_alldf[,2],lag.max=40, plot=TRUE, main=colnames(ts_alldf)[2], ylim=c(-0.5,1))
+acf(ts_alldf[,3],lag.max=40, plot=TRUE, main=colnames(ts_alldf)[3], ylim=c(-0.5,1))
 ```
+The differencing method was more efficient in eliminating the trend. Most but not all autocorrelation has been removed in the Differenced series. 
 
 
 ### Q6
