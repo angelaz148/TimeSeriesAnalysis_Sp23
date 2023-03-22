@@ -199,6 +199,7 @@ Now we will create a data frame that combines performance metrics for all the th
 #create data frame
 seas_scores <- as.data.frame(rbind(MEAN_scores, SNAIVE_scores, SARIMA_scores))
 row.names(seas_scores) <- c("MEAN", "SNAIVE","SARIMA")
+#want the errors to be small 
 
 #choose model with lowest RMSE
 best_model_index <- which.min(seas_scores[,"RMSE"])
@@ -215,6 +216,7 @@ kbl(seas_scores,
   kable_styling(full_width = FALSE, position = "center") %>%
   #highlight model with lowest RMSE
   kable_styling(latex_options="striped", stripe_index = which.min(seas_scores[,"RMSE"]))
+#gets highlighted when you knit to pdf 
 ```
 
 ## Visialization Challenge
