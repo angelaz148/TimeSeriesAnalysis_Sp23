@@ -1,0 +1,248 @@
+---
+title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
+author: "Angela Zeng"
+subtitle: "Assignment 8 - Due date 03/27/23"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+geometry: margin=2.54cm
+editor_options:
+  chunk_output_type: console
+---
+
+## Directions
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github. And to do so you will need to fork our repository and link it to your RStudio.
+
+Once you have the project open the first thing you will do is change "Student Name" on line 3 with your name. Then you will start working through the assignment by **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Rename the pdf file such that it includes your first and last name (e.g., "LuanaLima_TSA_A08_Sp22.Rmd"). Submit this pdf using Sakai.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+## Set up
+
+Some packages needed for this assignment: `forecast`,`tseries`,`smooth`. Do not forget to load them before running your script, since they are NOT default packages.
+
+```{r}
+#Load/install required package here
+library(forecast)
+library(tseries)
+library(smooth)
+library(tidyverse)
+library(xts)
+library(kableExtra)
+```
+
+## Importing and processing the data set
+Consider the data from the file "inflowtimeseries.txt". The data corresponds to the monthly inflow in $m^{3}/s$ for some hydro power plants in Brazil. You will only use the last column of the data set which represents one hydro plant in the Amazon river basin. The data span the period from January 1931 to August 2011 and is provided by the Brazilian ISO.
+
+For all parts of the assignment prepare the data set such that the model consider only the data from January 2000 up to December 2009. Leave the year 2010 of data (January 2010 to December 2010) for the out-of-sample analysis. Do **NOT** use data from 2010 and 2011 for model fitting. You will only use it to compute forecast accuracy of your model.
+
+## Part I: Preparing the data sets
+### Q1
+Read the file into a data frame. Prepare your time series data vector such that observations start in January 2000 and end in December 2009. Make you sure you specify the **start=** and **frequency=** arguments. Plot the time series over time, ACF and PACF.
+
+```{r}
+#import data and create date column 
+df <- read.table(file="./Data/inflowtimeseries.txt", header=F,dec = ".",sep="",stringsAsFactors = TRUE)
+date<- my(paste(df$V1, df$V2))
+df<- cbind(date, df)
+
+#extract desired columns
+df_clean<- df %>%
+  filter(year(date)>=2000) %>%
+  filter(year(date)<= 2009)
+df_clean<- df_clean[,c(1,ncol(df_clean))]
+colnames(df_clean)[2]<- "monthly_inflow"
+
+#create ts object
+ts_inflow<- ts(df_clean[,2], frequency = 12, start = c(2000,1))
+
+#series over time 
+ggplot(df_clean, aes(x= date , y= monthly_inflow)) + 
+  geom_line(color= "red") + 
+  ylab('Monthly Hydro Inflow (m^3/s)')+
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y")
+
+#ACF and PACf plots 
+par(mfrow=c(1,2))
+Acf(ts_inflow,lag.max=40, plot=TRUE)
+Pacf(ts_inflow,lag.max=40, plot=TRUE)
+```
+
+### Q2
+Using the $decompose()$ or $stl()$ and the $seasadj()$ functions create a series without the seasonal component, i.e., a deseasonalized inflow series. Plot the deseasonalized series and original series together using ggplot, make sure your plot includes a legend. Plot ACF and PACF for the deaseasonalized series. Compare with the plots obtained in Q1.
+
+```{r}
+#decompose
+decompose_inflow<- decompose(ts_inflow, "additive")
+plot(decompose_inflow) 
+
+#create deseasonalized time series
+deseasonal_inflow <- seasadj(decompose_inflow) 
+
+#df with og series and deseasonalized series 
+df_clean2 <- data.frame(date = df_clean$date,
+                        monthly_inflow = df_clean$monthly_inflow,
+                        deseasonal_inflow = as.numeric(deseasonal_inflow))
+
+#plot 
+ggplot(df_clean2) +
+  geom_line(aes(x = date, y = `monthly_inflow`, color = "Original Series")) +
+  geom_line(aes(x = date, y = `deseasonal_inflow`, color = "Deseasonalized Series")) +
+  scale_color_manual(values = c("Original Series" = "red", "Deseasonalized Series" = "blue"))+
+  theme(legend.position = "bottom") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y")+
+  labs(color="",
+       title = 'Monthly Inflow at Amazon River Basin Hydro Plant',
+       y='Hydrological Inflow (m^3/s)',
+       x='Year')
+
+#ACF and PACF plots 
+par(mfrow=c(1,2))
+Acf(deseasonal_inflow,lag.max=40, plot=TRUE)
+Pacf(deseasonal_inflow,lag.max=40, plot=TRUE)
+```
+
+> Answer: It is much easier to see the trend in the deseasoned series. The ACF and PACF plots are also much closer to where we want them to be, between the blue lines. 
+
+## Part II: Forecasting with ARIMA models and its variations
+### Q3
+Fit a non-seasonal ARIMA$(p,d,q)$ model using the auto.arima() function to the non-seasonal data. Forecast 12 months ahead of time using the $forecast()$ function. Plot your forecasting results and further include on the plot the last year of non-seasonal data to compare with forecasted values (similar to the plot on the lesson file for M10).
+
+```{r}
+#forecast with auto arima on deseasonalized data 
+deseas_arima_autofit <- auto.arima(deseasonal_inflow, max.D = 0, max.P = 0, max.Q = 0)
+print(deseas_arima_autofit)
+
+par(mfrow=c(1,1))
+deseas_arima_forecast <- forecast(object = deseas_arima_autofit, h = 12)
+plot(deseas_arima_forecast)
+```
+
+### Q4
+Put the seasonality back on your forecasted values and compare with the original seasonal data values. $Hint:$ One way to do it is by summing the last year of the seasonal component from your decompose object to the forecasted series. 
+
+```{r}
+#extract one year from the seasonal component of the decompose object 
+seasyr<- decompose_inflow$seasonal[1:12]
+
+#add seasonal component to the forecast 
+seas_arima_forecast<- deseas_arima_forecast$mean + seasyr
+
+
+df_seas_forecast<- data.frame(date=as.Date(as.yearmon(time(seas_arima_forecast))),
+                              monthly_inflow= NA,
+                              monthly_inflow_forecast=as.matrix(seas_arima_forecast))
+
+#combine forecast with seasonal component to original seasonal data values 
+df_clean$monthly_inflow_forecast<- NA
+df_seas_forecast<- rbind(df_clean, df_seas_forecast)
+
+
+```
+
+### Q5
+Repeat Q3 for the original data, but now fit a seasonal ARIMA$(p,d,q)x(P,D,Q)_ {12}$ also using the auto.arima().
+
+```{r}
+#forecast with auto arima on original data 
+orig_arima_autofit <- auto.arima(ts_inflow)
+print(orig_arima_autofit)
+
+par(mfrow=c(1,1))
+orig_arima_forecast <- forecast(object = orig_arima_autofit, h = 12)
+plot(orig_arima_forecast)
+```
+
+### Q6
+Compare the plots from Q4 and Q5 using the autoplot() function.
+```{r}
+#plot both Q4 and Q5
+autoplot(ts_inflow) +
+  autolayer(orig_arima_forecast,series="seasonal_forecast_on_original",PI=FALSE) +
+  autolayer(seas_arima_forecast,series="deaseasonal_forecast_plus_seasonal",PI=FALSE)+
+  theme(legend.position = "bottom")+
+  ylab("Monthly Hydrological Inflow (m^3/s)") +
+  xlab("")
+```
+
+> Answer: The troughs and peaks between the two forecasts are a bit shifted from each other, but otherwise, the predictions are close to each other. 
+
+
+## Part III: Forecasting with Other Models
+### Q7
+Fit an exponential smooth model to the original time series using the function $ses()$  from package `forecast`. Note that this function automatically do the forecast. Do not forget to set the arguments: silent=FALSE and holdout=FALSE, so that the plot is produced and the forecast is for the year of 2010.
+
+```{r}
+#simple exponential smoothing on original data
+ses_orig=ses(y = ts_inflow, h = 12, holdout = FALSE, silent = FALSE)  #alpha is NULL
+checkresiduals(ses_orig)
+```
+
+
+## Part IV: Checking Forecast Accuracy
+### Q8
+Make one plot with the complete original seasonal historical data (Jan 2000 to Dec 2010). Now add the forecasts from each of the developed models in parts Q4, Q5, Q7 and Q8. You can do it using the autoplot() combined with autolayer(). If everything is correct in terms of time line, the forecasted lines should appear only in the final year. If you decide to use ggplot() you will need to create a data frame with all the series will need to plot. Remember to use a different color for each model and add a legend in the end to tell which forecast lines corresponds to each model.
+
+
+```{r}
+#create full data frame from 2000 to 2010 
+df_full<- df %>%
+  filter(year(date)>=2000) %>%
+  filter(year(date)<= 2010)
+df_full<- df_full[,c(1,ncol(df_full))]
+colnames(df_full)[2]<- "monthly_inflow"
+
+ts_full_inflow<- ts(df_full[,2], frequency = 12, start = c(2000,1)) 
+
+#plot all forecasts 
+autoplot(ts_full_inflow) +
+  autolayer(orig_arima_forecast,series="seasonal forecast on original",PI=F) +
+  autolayer(seas_arima_forecast,series="deaseasonal forecast plus seasonal",PI=F)+
+  autolayer(ses_orig, series="simple exponential smoothing", PI=F)+
+  theme(legend.position = "bottom")+
+  ylab("Monthly Hydrological Inflow (m^3/s)") +
+  xlab("")
+```
+
+### Q9
+From the plot in Q9 which model or model(s) are leading to the better forecasts? Explain your answer. Hint: Think about which models are doing a better job forecasting the high and low inflow months for example.
+
+> Answer: The SARIMA forecast is the best at forecasting the high and low inflow months. It doesn't do a great job, but is better than the other two models. 
+
+### Q10
+Now compute the following forecast metrics we learned in class: RMSE and MAPE,  for all the models you plotted in part Q9. You can do this by hand since your have forecasted and observed values for the year of 2010. Or you can use R function $accuracy()$ from package "forecast" to do it. Build and a table with the results and highlight the model with the lowest MAPE. Does the lowest MAPE corresponds match your answer for part Q10?
+
+```{r}
+#prep data 
+forecast<- as.matrix(seas_arima_forecast)
+actual<- as.matrix(df_full[(nrow(df_full)-12+1):nrow(df_full),2])
+#calculate RMSE and MAPE for seas_arima_forecast
+MSE = sum((actual - forecast)^2)/nrow(actual)
+RMSE = sqrt(MSE)
+MAPE = sum(abs(actual - forecast)/actual)/nrow(actual)*100
+seas_arima_scores<- cbind(RMSE, MAPE)
+
+#calculate accuracy for other forecasts 
+orig_arima_scores<- accuracy(orig_arima_forecast)
+orig_arima_scores<- orig_arima_scores[,c("RMSE","MAPE")]
+ses_scores <- accuracy(ses_orig) 
+ses_scores<- ses_scores[,c("RMSE","MAPE")]
+
+deseas_scores <- as.data.frame(rbind(orig_arima_scores, seas_arima_scores, ses_scores))
+rownames(deseas_scores)<- c("SARIMA","(ARIMA on Deseasonal)+Seasonal","SES")
+
+#build table 
+kbl(deseas_scores, 
+      caption = "Forecast Accuracy for Hydrological Data",
+      digits = array(5,ncol(deseas_scores))) %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  #highlight model with lowest RMSE
+  kable_styling(latex_options="striped", stripe_index = which.min(deseas_scores[,"RMSE"]))
+
+```
+> Answer: the SARIMA forecast has the lowest MAPE score, and that is consistent with my answer in Q9. 
